@@ -1,0 +1,53 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ template "name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+  name: {{ template "name" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      affinity:
+        # TODO: to be implemented
+        # nodeAffinity:
+        #   requiredDuringSchedulingIgnoredDuringExecution:
+        #     nodeSelectorTerms:
+        #     - matchExpressions:
+        #       - key: {{ .Values.nodeAffinity.key }}
+        #         operator: In
+        #         values:
+        #         - {{ .Values.nodeAffinity.value }}
+      containers:
+      - name: {{ template "name" . }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+        ports:
+        - containerPort: 6697
+        resources:
+{{ toYaml .Values.resources | indent 10 }}
+        volumeMounts:
+        - name: config
+          mountPath: /znc-data/configs
+        - name: data
+          mountPath: /znc-data
+      volumes:
+{{- if .Values.persistence.enabled }}
+      - name: data
+        persistentVolumeClaim:
+          claimName: {{ .Values.persistence.existingClaim | default (include "name" .) }}
+{{- else }}
+      - name: data
+        emptyDir: {}
+      - name: config
+        configMap:
+          name: {{ template "name" . }}
+        emptyDir: {}
+{{- end -}}

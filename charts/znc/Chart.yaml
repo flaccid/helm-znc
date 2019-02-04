@@ -1,0 +1,13 @@
+name: znc
+version: 0.0.1
+description: znc
+keywords:
+- znc
+- irc
+- bouncer
+sources:
+- https://github.com/flaccid/helm-znc
+maintainers:
+- name: flaccid
+  email: chris@fordham.id.au
+engine: gotpl

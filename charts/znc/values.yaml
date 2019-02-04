@@ -1,0 +1,51 @@
+replicaCount: 1
+image:
+  repository: znc
+  tag: 1.6.5
+  pullPolicy: IfNotPresent
+service:
+  nodePort: 30070
+resources: {}
+  # limits:
+  #   cpu: 10m
+  #   memory: 20Mi
+  # requests:
+  #   cpu: 10m
+  #   memory: 20Mi
+nodeAffinity:
+  key: kubernetes.io/hostname
+  value: node1
+persistence:
+  enabled: false
+  accessMode: ReadWriteOnce
+  size: 10Gi
+
+  # If defined, PVC must be created manually before volume will be bound
+  # existingClaim: ""
+
+  # If set to "-", storageClassName: "", which disables dynamic provisioning
+  # If undefined or set to null, defaults to the default storageClass
+  # storageClass: ""
+config: |
+  Version = 1.6.5
+  LoadModule = webadmin
+
+  <Listener l>
+    Port = 6697
+    IPv4 = true
+    IPv6 = false
+    SSL = false
+    AllowWeb = true
+  </Listener>
+
+  <User admin>
+    Pass       = sha256#e9f0ea68b0eb26140f6cb2fa03a92a2a370caaf7320021810a25ec2a8fbe4330#3ADv,!wALdKUNj5aNBw(#
+    Admin      = true
+    Nick       = admin
+    AltNick    = admin_
+    Ident      = admin
+    RealName   = Got ZNC?
+    BindHost   = 0.0.0.0
+    LoadModule = chansaver
+    LoadModule = controlpanel
+  </User>
