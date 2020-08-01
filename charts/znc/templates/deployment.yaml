@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -9,12 +9,28 @@ metadata:
   name: {{ template "name" . }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "name" . }}
   template:
     metadata:
       labels:
         app: {{ template "name" . }}
         release: {{ .Release.Name }}
     spec:
+      initContainers:
+      - name: "copy-config"
+        image: "busybox:latest"
+        command: [
+            "/bin/sh",
+            "-ec",
+            "mkdir /znc-data/configs && cp /znc-data-configs-ro/znc.conf /znc-data/configs"
+        ]
+        volumeMounts:
+        - name: config-ro
+          mountPath: /znc-data-configs-ro
+        - name: data
+          mountPath: /znc-data
       affinity:
         # TODO: to be implemented
         # nodeAffinity:
@@ -34,8 +50,8 @@ spec:
         resources:
 {{ toYaml .Values.resources | indent 10 }}
         volumeMounts:
-        - name: config
-          mountPath: /znc-data/configs
+        - name: config-ro
+          mountPath: /znc-data-configs-ro
         - name: data
           mountPath: /znc-data
       volumes:
@@ -46,8 +62,7 @@ spec:
 {{- else }}
       - name: data
         emptyDir: {}
-      - name: config
+      - name: config-ro
         configMap:
           name: {{ template "name" . }}
-        emptyDir: {}
 {{- end -}}
